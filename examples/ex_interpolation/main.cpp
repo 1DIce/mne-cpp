@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
     std::mt19937 rndEngine(seed());
     std::uniform_real_distribution<double>uniDist(-100, 100);
     QVector<Vector3d> sensorPositions;
-    for(qint32 i = 0; i < 300; ++i)
+    for(qint32 i = 0; i < 500; ++i)
     {
         sensorPositions.push_back(Vector3d(uniDist(rndEngine),uniDist(rndEngine),uniDist(rndEngine)));
     }
@@ -226,6 +226,33 @@ int main(int argc, char *argv[])
                 + pow(testSurface.rr(mappedSensors->at(i), 2) - testSurface.rr(linMappedSensors[i], 2), 2));  // z-cord
         std::cout << dist << "\t";
     }
+    std::cout << "a\n";
+
+
+//    qint32 maxSameCount = 0;
+//    for(qint32 j= 0; j < testSurface.rr.rows(); ++j)
+//    {
+//    qint32 sameCount = 0;
+//        for(qint32 i = 0; i < testSurface.rr.rows(); ++i)
+//        {
+//            if(i == j )
+//            {
+//                continue;
+//            }
+//            if(testSurface.rr(j,2) == testSurface.rr(i,2))
+//            {
+//                sameCount++;
+//            }
+//        }
+//        if(sameCount > maxSameCount){
+//            maxSameCount = sameCount;
+//        }
+
+//    }
+
+//    std::cout << maxSameCount << std::endl;
+
+
     //Read and show sensor helmets
 //    QFile t_filesensorSurfaceVV("./resources/sensorSurfaces/306m_rt.fif");
 //    MNEBem t_sensorSurfaceVV(t_filesensorSurfaceVV);

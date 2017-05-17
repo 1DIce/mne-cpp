@@ -156,8 +156,9 @@ QSharedPointer<QVector<qint32>> GeometryInfo::projectSensor(const MNEBemSurface 
 {
     QSharedPointer<QVector<qint32>> outputArray = QSharedPointer<QVector<qint32>>::create();
     outputArray->reserve(sensorPositions.size());
-    ProjectingKdTree kdTree(inSurface, 20);
-
+    qint64 startTimeMsecs = QDateTime::currentMSecsSinceEpoch();
+    ProjectingKdTree kdTree(inSurface, 110);
+    std::cout << QDateTime::currentMSecsSinceEpoch()- startTimeMsecs <<" ms " << std::endl;
     for(const Vector3d &tempSensor : sensorPositions)
     {
         outputArray->push_back(kdTree.findNearestNeighbor(tempSensor));

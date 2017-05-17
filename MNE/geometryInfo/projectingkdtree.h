@@ -44,6 +44,7 @@
 
 #include "geometryinfo_global.h"
 #include <mne/mne_bem_surface.h>
+#include <vector>
 
 //*************************************************************************************************************
 //=============================================================================================================
@@ -51,7 +52,7 @@
 //=============================================================================================================
 
 #include <QSharedPointer>
-#include <QVector>
+//#include <QVector>
 
 
 //*************************************************************************************************************
@@ -104,7 +105,8 @@ public:
     */
     ProjectingKdTree(const MNELIB::MNEBemSurface &inSurface, quint32 bucketSize);
 
-    ~ProjectingKdTree() = default;
+    //custom destructor
+    ~ProjectingKdTree();
 
     //copy operations
     ProjectingKdTree(const ProjectingKdTree&) = delete;
@@ -124,27 +126,27 @@ protected:
 private:
 
     //declares the nodes the tree is made of
-    struct ProjectingKdTreeNode
+    struct ProjectingNode
     {
-        ProjectingKdTreeNode(qint8 axis) : m_axis(axis), m_vertIndex(-1), m_bucketPtr(nullptr), m_bucketSize(0) {}
-        // array of pointers to both subtrees
-        QSharedPointer<ProjectingKdTreeNode> m_subTrees[2];
-        // index of the vertice in the MNEBemSurface saved in this node -1 if there are buckets in the node
-        qint32 m_vertIndex;
-        //pointer to the start of the bucket of this node. nullptr if there is no bucket
-        qint32 *m_bucketPtr;
-        //size of the bucket
-        qint32 m_bucketSize;
-        qint8 m_axis;
+
+        std::vector<qint32>::iterator m_bucketBegin;
+        std::vector<qint32>::iterator m_bucketEnd;
+
+        qint8 m_divAxis;
+        double m_divValue;
+
+        ProjectingNode *m_subTrees[2];
     };
     inline double distance3D(const Eigen::Vector3d &sensorPosition, qint32 vertIndex) const;
-    QSharedPointer<ProjectingKdTreeNode> recursiveBuild(qint32 *vertIndices, qint32 numPoints, qint32 depth, qint32 maxDepth);
-    void recursiveSearch(const Eigen::Vector3d &sensorPosition, QSharedPointer<ProjectingKdTreeNode> node, qint32 &champion, double &minDistance) const;
+    ProjectingNode *recursiveBuild(std::vector<qint32>::iterator bucketBegin, std::vector<qint32>::iterator bucketEnd, qint32 depth);
+    void recursiveSearch(const Eigen::Vector3d &sensorPosition, ProjectingNode *node, qint32 &champion, double &minDistance) const;
+    void recursiveClear(ProjectingNode *node);
     //saves a pointer to the root node of the search tree
-    QSharedPointer<ProjectingKdTreeNode> m_root;
+    ProjectingNode *m_root;
     const MNELIB::MNEBemSurface &m_surface;
     //all indices of the MENBemSurface rr are stored here
-    QVector<qint32> m_vertIndices;
+    std::vector<qint32> m_vertIndices;
+    qint32 m_maxBucketSize;
 
 };
 
