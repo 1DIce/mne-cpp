@@ -91,6 +91,14 @@ ProjectingKdTree::ProjectingKdTree(const MNELIB::MNEBemSurface &inSurface, quint
     m_vertIndices = std::vector<qint32>(inSurface.rr.rows());
     std::iota(m_vertIndices.begin(), m_vertIndices.end(), 0);
 
+    mergeSort(m_vertIndices, 0, 200000, 0);
+
+//    for (int i = 0; i <= 2000; i++)
+//    {
+//        std::cout << m_vertIndices[i] << ";" << m_surface.rr(m_vertIndices[i],0) << " ";
+//    }
+    std::cout << '\n';
+
     if(bucketSize > 0 )
     {
         m_root = recursiveBuild(m_vertIndices.begin(), m_vertIndices.end(), 0);

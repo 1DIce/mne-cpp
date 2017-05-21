@@ -67,7 +67,7 @@
 #include <QApplication>
 #include <QMainWindow>
 #include <QCommandLineParser>
-#include<QDateTime>
+#include <QDateTime>
 
 
 //*************************************************************************************************************
@@ -188,45 +188,45 @@ int main(int argc, char *argv[])
     std::cout << QDateTime::currentMSecsSinceEpoch() - startTimeKd <<" ms " << std::endl;
     for(const qint32 &idx : *mappedSensors)
     {
-        std::cout << idx << " ";
+       // std::cout << idx << " ";
     }
     std::cout << "\n";
 
     ///lin search sensor positions
-    QVector<qint32> linMappedSensors;
-    linMappedSensors.reserve(sensorPositions.size());
-    qint64 startTimeLin = QDateTime::currentMSecsSinceEpoch();
-    for(const Vector3d &sensor : sensorPositions)
-    {
-        qint32 champion;
-        double champDist = std::numeric_limits<double>::max();
-        for(qint32 i = 0; i < testSurface.rr.rows(); ++i)
-        {
-            double dist = sqrt(pow(testSurface.rr(i, 0) - sensor[0], 2)  // x-cord
-                    + pow(testSurface.rr(i, 1) - sensor[1], 2)    // y-cord
-                    + pow(testSurface.rr(i, 2) - sensor[2], 2));  // z-cord
-            if(dist < champDist)
-            {
-                champion = i;
-                champDist = dist;
-            }
-        }
-        linMappedSensors.push_back(champion);
-    }
-    std::cout << QDateTime::currentMSecsSinceEpoch() - startTimeLin <<" ms " << std::endl;
-    for(const qint32 &idx : linMappedSensors)
-    {
-        std::cout << idx << " ";
-    }
-    std::cout << "\n";
-    for(qint32 i = 0; i < mappedSensors->size(); ++i)
-    {
-        double dist = sqrt(pow(testSurface.rr(mappedSensors->at(i), 0) - testSurface.rr(linMappedSensors[i], 0), 2) // x-cord
-                + pow(testSurface.rr(mappedSensors->at(i), 1) - testSurface.rr(linMappedSensors[i], 1), 2)   // y-cord
-                + pow(testSurface.rr(mappedSensors->at(i), 2) - testSurface.rr(linMappedSensors[i], 2), 2));  // z-cord
-        std::cout << dist << "\t";
-    }
-    std::cout << "a\n";
+//    QVector<qint32> linMappedSensors;
+//    linMappedSensors.reserve(sensorPositions.size());
+//    qint64 startTimeLin = QDateTime::currentMSecsSinceEpoch();
+//    for(const Vector3d &sensor : sensorPositions)
+//    {
+//        qint32 champion;
+//        double champDist = std::numeric_limits<double>::max();
+//        for(qint32 i = 0; i < testSurface.rr.rows(); ++i)
+//        {
+//            double dist = sqrt(pow(testSurface.rr(i, 0) - sensor[0], 2)  // x-cord
+//                    + pow(testSurface.rr(i, 1) - sensor[1], 2)    // y-cord
+//                    + pow(testSurface.rr(i, 2) - sensor[2], 2));  // z-cord
+//            if(dist < champDist)
+//            {
+//                champion = i;
+//                champDist = dist;
+//            }
+//        }
+//        linMappedSensors.push_back(champion);
+//    }
+//    std::cout << QDateTime::currentMSecsSinceEpoch() - startTimeLin <<" ms " << std::endl;
+//    for(const qint32 &idx : linMappedSensors)
+//    {
+//        std::cout << idx << " ";
+//    }
+//    std::cout << "\n";
+//    for(qint32 i = 0; i < mappedSensors->size(); ++i)
+//    {
+//        double dist = sqrt(pow(testSurface.rr(mappedSensors->at(i), 0) - testSurface.rr(linMappedSensors[i], 0), 2) // x-cord
+//                + pow(testSurface.rr(mappedSensors->at(i), 1) - testSurface.rr(linMappedSensors[i], 1), 2)   // y-cord
+//                + pow(testSurface.rr(mappedSensors->at(i), 2) - testSurface.rr(linMappedSensors[i], 2), 2));  // z-cord
+//        std::cout << dist << "\t";
+//    }
+//    std::cout << "a\n";
 
 
 //    qint32 maxSameCount = 0;

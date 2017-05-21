@@ -45,6 +45,7 @@
 #include "geometryinfo_global.h"
 #include <mne/mne_bem_surface.h>
 #include <vector>
+#include <cmath>
 
 //*************************************************************************************************************
 //=============================================================================================================
@@ -148,6 +149,10 @@ private:
     std::vector<qint32> m_vertIndices;
     qint32 m_maxBucketSize;
 
+    inline void mergeSort(std::vector<qint32> &m_vertIndices, qint32 start, qint32 end, qint8 axis);
+    inline void merge (std::vector<qint32> &m_vertIndices, qint32 start, qint32 middle, qint32 end, qint8 axis);
+    inline qint32 ProjectingKdTree::medianSort (std::vector<qint32> &m_vertIndicesX, std::vector<qint32> &m_vertIndicesY, std::vector<qint32> &m_vertIndicesZ, std::vector<qint32> &m_vertIndicesZ, std::vector<qint32> &m_vertIndicesTemp, qint32 start, qint32 end, qint8 axis);
+    ProjectingNode *balancedTreeBuild(std::vector<qint32>::iterator bucketBegin, std::vector<qint32>::iterator bucketEnd, qint32 depth);
 };
 
 
@@ -160,6 +165,360 @@ inline double ProjectingKdTree::distance3D(const Eigen::Vector3d &sensorPosition
     return sqrt(pow(m_surface.rr(vertIndex, 0) - sensorPosition[0], 2)  // x-cord
             + pow(m_surface.rr(vertIndex, 1) - sensorPosition[1], 2)    // y-cord
             + pow(m_surface.rr(vertIndex, 2) - sensorPosition[2], 2));  // z-cord
+}
+
+inline qint32 ProjectingKdTree::medianSort (std::vector<qint32> &m_vertIndicesX, std::vector<qint32> &m_vertIndicesY, std::vector<qint32> &m_vertIndicesZ, std::vector<qint32> &m_vertIndicesTemp, qint32 start, qint32 end, qint8 axis)
+{
+    //copy vertIndices X -> Temp
+
+    qint32 median = m_vertIndicesX[ceil((start+end)/2)];
+    qint32 m_start = start;
+    qint32 m_med = median+1;
+
+    for (int m_cnt = 0; m_cnt <= m_vertIndicesX.size(); m_cnt++)
+    {
+       if (m_vertIndicesY[m_cnt] == m_vertIndicesX[m_cnt])
+       {
+           m_cnt++;
+       }
+       else
+       {
+           if (m_surface.rr(m_vertIndicesY[m_cnt],0) < m_surface.rr(m_vertIndicesX[median],0))
+           {
+               m_vertIndicesX[m_start] = m_vertIndicesY[m_cnt];
+               m_start++;
+           }
+           else
+           {
+               m_vertIndicesX[m_med] = m_vertIndicesY[m_cnt];
+               m_med++;
+           }
+       }
+    }
+
+//    switch(axis)
+//    {
+//        case 0: qint32 median = m_vertIndicesX[ceil((start+end)/2)];
+//            break;
+//        case 1: qint32 median = m_vertIndicesY[ceil((start+end)/2)];
+//            break;
+//        case 2: qint32 median = m_vertIndicesZ[ceil((start+end)/2)];
+//            break;
+//        default: std::cout << "ERROR";
+//    }
+
+    //copy vertIndices Temp -> Z
+}
+
+inline void ProjectingKdTree::mergeSort(std::vector<qint32> &m_vertIndices, qint32 start, qint32 end, qint8 axis)
+{
+    //std::cout << start << " + " << end << '\n' ;
+    if (start < end)
+    {
+        int middle = int((end + start) / 2);
+        mergeSort(m_vertIndices, start, middle, axis);
+        mergeSort(m_vertIndices, middle+1, end, axis);
+        merge(m_vertIndices, start, middle, end, axis);
+    }
+    return;
+}
+
+inline void ProjectingKdTree::merge (std::vector<qint32> &m_vertIndices, qint32 start, qint32 middle, qint32 end, qint8 axis)
+{
+//    std::vector<qint32> m_left (middle-start+1);
+//    for (int l_counter = 0; l_counter < middle-start; l_counter++)
+//    {
+//        m_left[l_counter] = m_vertIndices[start+l_counter];
+//        std::cout << m_left[l_counter] << " ";
+//    }
+
+//    m_left.push_back(100000);
+
+//    std::cout << '\n';
+//    std::vector<qint32> m_right (end-middle+2);
+//    for (int r_counter = 0; r_counter < end-middle+1; r_counter++)
+//    {
+//        m_right[r_counter] = m_vertIndices[middle+r_counter];
+//        std::cout << m_right[r_counter] << " ";
+//    }
+
+//    m_right.push_back(100000);
+
+//    int m_cmp_i = 0;
+//    int m_cmp_j = 0;
+
+//    for (int k = start; k <= end; k++)
+//    {
+//        if (m_surface.rr(m_left[m_cmp_i],0) == m_surface.rr(m_right[m_cmp_j],0))
+//        {
+//            if(m_surface.rr(m_left[m_cmp_i],1) == m_surface.rr(m_right[m_cmp_j],1))
+//            {
+//                if (m_surface.rr(m_left[m_cmp_i],2) < m_surface.rr(m_right[m_cmp_j],2))
+//                {
+//                    m_vertIndices[k] = m_left[m_cmp_i];
+//                    m_cmp_i++;
+//                }
+//                else
+//                {
+//                    m_vertIndices[k] = m_right[m_cmp_j];
+//                    m_cmp_j++;
+//                }
+//            }
+//            else
+//            {
+//                if (m_surface.rr(m_left[m_cmp_i],1) < m_surface.rr(m_right[m_cmp_j],1))
+//                {
+//                    m_vertIndices[k] = m_left[m_cmp_i];
+//                    m_cmp_i++;
+//                }
+//                else
+//                {
+//                    m_vertIndices[k] = m_right[m_cmp_j];
+//                    m_cmp_j++;
+//                }
+//            }
+//        }
+//        else
+//        {
+//            if (m_surface.rr(m_left[m_cmp_i],0) < m_surface.rr(m_right[m_cmp_j],0))
+//            {
+//                m_vertIndices[k] = m_left[m_cmp_i];
+//                m_cmp_i++;
+//            }
+//            else
+//            {
+//                m_vertIndices[k] = m_right[m_cmp_j];
+//                m_cmp_j++;
+//            }
+
+//        }
+//    }
+
+    std::vector<qint32> m_temp (200000);
+    qint32 m_i = start;
+    qint32 m_k = start;
+    qint32 m_j = middle+1;
+
+    switch (axis)
+    {
+        case 0:
+        while (m_i<= middle && m_j <= end)
+                        {
+                        if (m_surface.rr(m_vertIndices[m_i],0) == m_surface.rr(m_vertIndices[m_j],0))
+                        {
+                            if (m_surface.rr(m_vertIndices[m_i],1) == m_surface.rr(m_vertIndices[m_j],1))
+                            {
+                                if (m_surface.rr(m_vertIndices[m_i],2) < m_surface.rr(m_vertIndices[m_j],2))
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_i];
+                                    m_k++;
+                                    m_i++;
+                                }
+                                else
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_j];
+                                    m_k++;
+                                    m_j++;
+                                }
+                            }
+                            else
+                            {
+                                if (m_surface.rr(m_vertIndices[m_i],1) < m_surface.rr(m_vertIndices[m_j],1))
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_i];
+                                    m_k++;
+                                    m_i++;
+                                }
+                                else
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_j];
+                                    m_k++;
+                                    m_j++;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (m_surface.rr(m_vertIndices[m_i],0) < m_surface.rr(m_vertIndices[m_j],0))
+                            {
+                                m_temp[m_k] = m_vertIndices[m_i];
+                                m_k++;
+                                m_i++;
+                            }
+                            else
+                            {
+                                m_temp[m_k] = m_vertIndices[m_j];
+                                m_k++;
+                                m_j++;
+                            }
+                        }
+                    }
+
+                    while (m_i <= middle)
+                    {
+                        m_temp[m_k] = m_vertIndices[m_i];
+                        m_k++;
+                        m_i++;
+                    }
+
+                    while (m_j <= end)
+                    {
+                        m_temp[m_k] = m_vertIndices[m_j];
+                        m_k++;
+                        m_j++;
+                    }
+
+                    for (int i = start; i < m_k; i++)
+                    {
+                        m_vertIndices[i] = m_temp[i];
+                    }
+            break;
+        case 1:
+        while (m_i<= middle && m_j <= end)
+                        {
+                        if (m_surface.rr(m_vertIndices[m_i],1) == m_surface.rr(m_vertIndices[m_j],1))
+                        {
+                            if (m_surface.rr(m_vertIndices[m_i],2) == m_surface.rr(m_vertIndices[m_j],2))
+                            {
+                                if (m_surface.rr(m_vertIndices[m_i],0) < m_surface.rr(m_vertIndices[m_j],0))
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_i];
+                                    m_k++;
+                                    m_i++;
+                                }
+                                else
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_j];
+                                    m_k++;
+                                    m_j++;
+                                }
+                            }
+                            else
+                            {
+                                if (m_surface.rr(m_vertIndices[m_i],2) < m_surface.rr(m_vertIndices[m_j],2))
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_i];
+                                    m_k++;
+                                    m_i++;
+                                }
+                                else
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_j];
+                                    m_k++;
+                                    m_j++;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (m_surface.rr(m_vertIndices[m_i],1) < m_surface.rr(m_vertIndices[m_j],1))
+                            {
+                                m_temp[m_k] = m_vertIndices[m_i];
+                                m_k++;
+                                m_i++;
+                            }
+                            else
+                            {
+                                m_temp[m_k] = m_vertIndices[m_j];
+                                m_k++;
+                                m_j++;
+                            }
+                        }
+                    }
+
+                    while (m_i <= middle)
+                    {
+                        m_temp[m_k] = m_vertIndices[m_i];
+                        m_k++;
+                        m_i++;
+                    }
+
+                    while (m_j <= end)
+                    {
+                        m_temp[m_k] = m_vertIndices[m_j];
+                        m_k++;
+                        m_j++;
+                    }
+
+                    for (int i = start; i < m_k; i++)
+                    {
+                        m_vertIndices[i] = m_temp[i];
+                    }
+            break;
+        case 2:
+        while (m_i<= middle && m_j <= end)
+                        {
+                        if (m_surface.rr(m_vertIndices[m_i],2) == m_surface.rr(m_vertIndices[m_j],2))
+                        {
+                            if (m_surface.rr(m_vertIndices[m_i],0) == m_surface.rr(m_vertIndices[m_j],0))
+                            {
+                                if (m_surface.rr(m_vertIndices[m_i],1) < m_surface.rr(m_vertIndices[m_j],1))
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_i];
+                                    m_k++;
+                                    m_i++;
+                                }
+                                else
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_j];
+                                    m_k++;
+                                    m_j++;
+                                }
+                            }
+                            else
+                            {
+                                if (m_surface.rr(m_vertIndices[m_i],0) < m_surface.rr(m_vertIndices[m_j],0))
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_i];
+                                    m_k++;
+                                    m_i++;
+                                }
+                                else
+                                {
+                                    m_temp[m_k] = m_vertIndices[m_j];
+                                    m_k++;
+                                    m_j++;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (m_surface.rr(m_vertIndices[m_i],2) < m_surface.rr(m_vertIndices[m_j],2))
+                            {
+                                m_temp[m_k] = m_vertIndices[m_i];
+                                m_k++;
+                                m_i++;
+                            }
+                            else
+                            {
+                                m_temp[m_k] = m_vertIndices[m_j];
+                                m_k++;
+                                m_j++;
+                            }
+                        }
+                    }
+
+                    while (m_i <= middle)
+                    {
+                        m_temp[m_k] = m_vertIndices[m_i];
+                        m_k++;
+                        m_i++;
+                    }
+
+                    while (m_j <= end)
+                    {
+                        m_temp[m_k] = m_vertIndices[m_j];
+                        m_k++;
+                        m_j++;
+                    }
+
+                    for (int i = start; i < m_k; i++)
+                    {
+                        m_vertIndices[i] = m_temp[i];
+                    }
+            break;
+        default: std::cout << "ERROR" ;
+    }
 }
 
 } // namespace GEOMETRYINFO
