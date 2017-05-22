@@ -91,17 +91,59 @@ ProjectingKdTree::ProjectingKdTree(const MNELIB::MNEBemSurface &inSurface, quint
     m_vertIndices = std::vector<qint32>(inSurface.rr.rows());
     std::iota(m_vertIndices.begin(), m_vertIndices.end(), 0);
 
-    mergeSort(m_vertIndices, 0, 200000, 0);
 
-//    for (int i = 0; i <= 2000; i++)
+
+
+    m_sortedIndices.push_back(m_vertIndices);
+    m_sortedIndices.push_back(m_vertIndices);
+    m_sortedIndices.push_back(m_vertIndices);
+    stableSortAxis(m_sortedIndices[0].begin(), m_sortedIndices[0].end(), 0);
+    stableSortAxis(m_sortedIndices[1].begin(), m_sortedIndices[1].end(), 1);
+    stableSortAxis(m_sortedIndices[2].begin(), m_sortedIndices[2].end(), 2);
+
+//    for (int i = 0; i <= 10; i++)
 //    {
-//        std::cout << m_vertIndices[i] << ";" << m_surface.rr(m_vertIndices[i],0) << " ";
+//        std::cout << "x: " << inSurface.rr(testVec[0][i], 0)
+//                <<  " y: " << inSurface.rr(testVec[0][i], 1)
+//                <<" z: " << inSurface.rr(testVec[0][i], 2);
+//        std::cout << '\n';
 //    }
-    std::cout << '\n';
+//    std::cout << '\n';
+//    medianSort(testVec, 0, 10, 0);
+
+//    for (int i = 0; i <= 10; i++)
+//    {
+//        std::cout << "x: " << inSurface.rr(testVec[0][i], 0)
+//                <<  " y: " << inSurface.rr(testVec[0][i], 1)
+//                <<" z: " << inSurface.rr(testVec[0][i], 2);
+//        std::cout << '\n';
+//    }
+//    std::cout << "YY\n";
+//    for (int i = 0; i <= 10; i++)
+//    {
+//        std::cout << "x: " << inSurface.rr(testVec[1][i], 0)
+//                <<  " y: " << inSurface.rr(testVec[1][i], 1)
+//                <<" z: " << inSurface.rr(testVec[1][i], 2);
+//        std::cout << '\n';
+//    }
+//    std::cout << "ZZ\n";
+//    for (int i = 0; i <= 10; i++)
+//    {
+//        std::cout << "x: " << inSurface.rr(testVec[2][i], 0)
+//                <<  " y: " << inSurface.rr(testVec[2][i], 1)
+//                <<" z: " << inSurface.rr(testVec[2][i], 2);
+//        std::cout << '\n';
+//    }
+//    std::cout << '\n';
+
+    //mergeSort(m_vertIndices, 0, inSurface.rr.rows(), 0);
+
+
 
     if(bucketSize > 0 )
     {
-        m_root = recursiveBuild(m_vertIndices.begin(), m_vertIndices.end(), 0);
+
+        m_root = recursiveBuild(0, m_vertIndices.size() - 1, 0);
     }
     else
     {
@@ -116,8 +158,20 @@ ProjectingKdTree::~ProjectingKdTree()
 
 qint32 ProjectingKdTree::findNearestNeighbor(const Eigen::Vector3d &sensorPosition) const
 {
+
     qint32 champion = -1;
     double minDistance = std::numeric_limits<double>::max();
+    //lin search in median vec
+    for(const qint32 &median : m_medianVec)
+    {
+        const double dist = distance3D(sensorPosition, median);
+        if(dist < minDistance)
+        {
+            champion = median;
+            minDistance = dist;
+        }
+    }
+
     recursiveSearch(sensorPosition, m_root, champion, minDistance);
     if(champion < 0)
     {
@@ -130,15 +184,14 @@ qint32 ProjectingKdTree::findNearestNeighbor(const Eigen::Vector3d &sensorPositi
 
 //*************************************************************************************************************
 
-ProjectingKdTree::ProjectingNode* ProjectingKdTree::recursiveBuild(std::vector<qint32>::iterator bucketBegin, std::vector<qint32>::iterator bucketEnd, qint32 depth)
+ProjectingKdTree::ProjectingNode* ProjectingKdTree::recursiveBuild(qint32 bucketBegin, qint32 bucketEnd, qint32 depth)
 {
 
     ProjectingNode *nodePtr = new ProjectingNode;
     //leaf reached
-    const qint32 numPoints = std::distance(bucketBegin, bucketEnd);
+    const qint32 numPoints = bucketEnd - bucketBegin;
     if(numPoints <= m_maxBucketSize)
     {
-
         nodePtr->m_bucketBegin = bucketBegin;
         nodePtr->m_bucketEnd = bucketEnd;
         //mark as leafnode
@@ -153,24 +206,22 @@ ProjectingKdTree::ProjectingNode* ProjectingKdTree::recursiveBuild(std::vector<q
         const qint8 axis = depth % 3;
         nodePtr->m_divAxis = axis;
 
-        std::sort(bucketBegin, bucketEnd, [&](qint32 lhs, qint32 rhs)
-        {
-            return m_surface.rr(lhs, axis) < m_surface.rr(rhs, axis);
-        });
 
-        const qint32 mid = numPoints / 2;
+
+        const qint32 mid = medianSort(m_sortedIndices, bucketBegin, bucketEnd, axis);
         //Median of 3
-        const double median = (m_surface.rr(*bucketBegin, axis) + m_surface.rr(*(bucketEnd - 1), axis) + m_surface.rr(*(bucketBegin + mid), axis)) / 3;
+        //const double median = (m_surface.rr(*bucketBegin, axis) + m_surface.rr(*(bucketEnd - 1), axis) + m_surface.rr(*(bucketBegin + mid), axis)) / 3;
 
-        auto midIt = std::upper_bound(bucketBegin, bucketEnd, median, [&](const double &value, const qint32 &indx){
-            return value < m_surface.rr(indx, axis);
-        });
+//        auto midIt = std::upper_bound(bucketBegin, bucketEnd, median, [&](const double &value, const qint32 &indx){
+//            return value < m_surface.rr(indx, axis);
+//        });
 
-        nodePtr->m_divValue = median;
+        nodePtr->m_divValue = m_surface.rr(m_sortedIndices[axis][mid], axis);
+        m_medianVec.push_back(m_sortedIndices[axis][mid]);
         //left subtree
-        nodePtr->m_subTrees[0] = recursiveBuild(bucketBegin, midIt, depth + 1);
+        nodePtr->m_subTrees[0] = recursiveBuild(bucketBegin, mid - 1, depth + 1);
         //right subtree
-        nodePtr->m_subTrees[1] = recursiveBuild(midIt, bucketEnd, depth + 1);
+        nodePtr->m_subTrees[1] = recursiveBuild(mid + 1, bucketEnd, depth + 1);
     }
     return nodePtr;
 
@@ -216,14 +267,17 @@ void ProjectingKdTree::recursiveSearch(const Eigen::Vector3d &sensorPosition, Pr
     if(node->m_subTrees[0] == nullptr && node->m_subTrees[1] == nullptr)
     {
         //lin search inside the bucket
-        std::for_each(node->m_bucketBegin, node->m_bucketEnd, [&](qint32 &n){
-            const double dist = distance3D(sensorPosition, n);
+        for(qint32 i = node->m_bucketBegin; i <= node->m_bucketEnd; ++i)
+        {
+            const qint32 idx = m_sortedIndices[node->m_divAxis][i];
+            const double dist = distance3D(sensorPosition, idx);
             if(dist < minDistance)
             {
-                champion = n;
+                champion = idx;
                 minDistance = dist;
             }
-        });
+        }
+
         return;
 //        //lin search in bucket
 //        for(qint32 i = 0; i < node->m_bucketSize; ++i)

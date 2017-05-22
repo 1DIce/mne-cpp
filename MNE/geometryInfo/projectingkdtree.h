@@ -46,6 +46,7 @@
 #include <mne/mne_bem_surface.h>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
 //*************************************************************************************************************
 //=============================================================================================================
@@ -130,8 +131,8 @@ private:
     struct ProjectingNode
     {
 
-        std::vector<qint32>::iterator m_bucketBegin;
-        std::vector<qint32>::iterator m_bucketEnd;
+        qint32 m_bucketBegin;
+        qint32 m_bucketEnd;
 
         qint8 m_divAxis;
         double m_divValue;
@@ -139,7 +140,7 @@ private:
         ProjectingNode *m_subTrees[2];
     };
     inline double distance3D(const Eigen::Vector3d &sensorPosition, qint32 vertIndex) const;
-    ProjectingNode *recursiveBuild(std::vector<qint32>::iterator bucketBegin, std::vector<qint32>::iterator bucketEnd, qint32 depth);
+    ProjectingNode *recursiveBuild(qint32 bucketBegin, qint32 bucketEnd, qint32 depth);
     void recursiveSearch(const Eigen::Vector3d &sensorPosition, ProjectingNode *node, qint32 &champion, double &minDistance) const;
     void recursiveClear(ProjectingNode *node);
     //saves a pointer to the root node of the search tree
@@ -147,12 +148,15 @@ private:
     const MNELIB::MNEBemSurface &m_surface;
     //all indices of the MENBemSurface rr are stored here
     std::vector<qint32> m_vertIndices;
+    std::vector<std::vector<qint32>> m_sortedIndices;
+    std::vector<qint32> m_medianVec;
     qint32 m_maxBucketSize;
 
     inline void mergeSort(std::vector<qint32> &m_vertIndices, qint32 start, qint32 end, qint8 axis);
     inline void merge (std::vector<qint32> &m_vertIndices, qint32 start, qint32 middle, qint32 end, qint8 axis);
-    inline qint32 ProjectingKdTree::medianSort (std::vector<qint32> &m_vertIndicesX, std::vector<qint32> &m_vertIndicesY, std::vector<qint32> &m_vertIndicesZ, std::vector<qint32> &m_vertIndicesZ, std::vector<qint32> &m_vertIndicesTemp, qint32 start, qint32 end, qint8 axis);
+    inline qint32 medianSort (std::vector<std::vector<qint32>> &vertIndices, qint32 start, qint32 end, qint8 axis);
     ProjectingNode *balancedTreeBuild(std::vector<qint32>::iterator bucketBegin, std::vector<qint32>::iterator bucketEnd, qint32 depth);
+    inline  void stableSortAxis(std::vector<qint32>::iterator begin, std::vector<qint32>::iterator end, qint8 axis);
 };
 
 
@@ -167,34 +171,83 @@ inline double ProjectingKdTree::distance3D(const Eigen::Vector3d &sensorPosition
             + pow(m_surface.rr(vertIndex, 2) - sensorPosition[2], 2));  // z-cord
 }
 
-inline qint32 ProjectingKdTree::medianSort (std::vector<qint32> &m_vertIndicesX, std::vector<qint32> &m_vertIndicesY, std::vector<qint32> &m_vertIndicesZ, std::vector<qint32> &m_vertIndicesTemp, qint32 start, qint32 end, qint8 axis)
+inline qint32 ProjectingKdTree::medianSort (std::vector<std::vector<qint32>> &vertIndices, qint32 start, qint32 end, qint8 axis)
 {
     //copy vertIndices X -> Temp
 
-    qint32 median = m_vertIndicesX[ceil((start+end)/2)];
-    qint32 m_start = start;
-    qint32 m_med = median+1;
+    //nur teil array
+    std::vector<qint32> tempVec = vertIndices[axis];
 
-    for (int m_cnt = 0; m_cnt <= m_vertIndicesX.size(); m_cnt++)
+    const qint32 mid = ceil((start+end)/2);
+    const qint32 medianIdx = vertIndices[axis][mid];
+    //qint32 m_start = start;
+    qint32 med = mid + 1;
+    qint32 begin = start;
+    qint32 otherAxis = (axis + 1) % 3;
+
+
+    for (int i = start; i <= end; i++)
     {
-       if (m_vertIndicesY[m_cnt] == m_vertIndicesX[m_cnt])
+       if (vertIndices[otherAxis][i] == medianIdx)
        {
-           m_cnt++;
+           continue;
        }
        else
        {
-           if (m_surface.rr(m_vertIndicesY[m_cnt],0) < m_surface.rr(m_vertIndicesX[median],0))
+           qint32 tempAxis = axis;
+           while(m_surface.rr(vertIndices[otherAxis][i],tempAxis) == m_surface.rr(medianIdx,tempAxis))
            {
-               m_vertIndicesX[m_start] = m_vertIndicesY[m_cnt];
-               m_start++;
+               tempAxis++;
+               tempAxis = tempAxis % 3;
+           }
+           if (m_surface.rr(vertIndices[otherAxis][i],tempAxis) < m_surface.rr(medianIdx,tempAxis))
+           {
+               vertIndices[axis][begin] = vertIndices[otherAxis][i];
+               begin++;
            }
            else
            {
-               m_vertIndicesX[m_med] = m_vertIndicesY[m_cnt];
-               m_med++;
+               vertIndices[axis][med] = vertIndices[otherAxis][i];
+               med++;
            }
        }
+
     }
+    /////////////////////
+    med = mid + 1;
+    begin = start;
+    axis = (axis + 1) % 3;
+    otherAxis = (axis + 1) % 3;
+    for (int i = start; i <= end; i++)
+    {
+       if (vertIndices[otherAxis][i] == medianIdx)
+       {
+           continue;
+       }
+       else
+       {
+           qint32 tempAxis = axis;
+           while(m_surface.rr(vertIndices[otherAxis][i],tempAxis) == m_surface.rr(medianIdx,tempAxis))
+           {
+               tempAxis++;
+               tempAxis = tempAxis % 3;
+           }
+           if (m_surface.rr(vertIndices[otherAxis][i],tempAxis) < m_surface.rr(medianIdx,tempAxis))
+           {
+               vertIndices[axis][begin] = vertIndices[otherAxis][i];
+               begin++;
+           }
+           else
+           {
+               vertIndices[axis][med] = vertIndices[otherAxis][i];
+               med++;
+           }
+       }
+
+    }
+    //todo tempvec zurück
+    vertIndices[otherAxis]= std::move(tempVec);
+    return mid;
 
 //    switch(axis)
 //    {
@@ -208,6 +261,19 @@ inline qint32 ProjectingKdTree::medianSort (std::vector<qint32> &m_vertIndicesX,
 //    }
 
     //copy vertIndices Temp -> Z
+}
+
+inline void ProjectingKdTree::stableSortAxis(std::vector<qint32>::iterator begin, std::vector<qint32>::iterator end, qint8 axis)
+{
+    std::stable_sort(begin, end, [&](qint32 lhs, qint32 rhs){
+        qint8 tempAxis = axis;
+        while(m_surface.rr(lhs, tempAxis) == m_surface.rr(rhs, tempAxis))
+        {
+            tempAxis++;
+            tempAxis = tempAxis % 3;
+        }
+        return m_surface.rr(lhs, tempAxis) < m_surface.rr(rhs, tempAxis);
+    });
 }
 
 inline void ProjectingKdTree::mergeSort(std::vector<qint32> &m_vertIndices, qint32 start, qint32 end, qint8 axis)
