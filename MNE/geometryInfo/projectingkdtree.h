@@ -176,10 +176,10 @@ inline qint32 ProjectingKdTree::medianSort (std::vector<std::vector<qint32>> &ve
     //copy vertIndices X -> Temp
 
     //nur teil array
-    std::vector<qint32> tempVec = vertIndices[axis];
+    std::vector<qint32> tempVec = vertIndices[0];
 
     const qint32 mid = ceil((start+end)/2);
-    const qint32 medianIdx = vertIndices[axis][mid];
+    const qint32 medianIdx = vertIndices[0][mid];
     //qint32 m_start = start;
     qint32 med = mid + 1;
     qint32 begin = start;
@@ -188,26 +188,26 @@ inline qint32 ProjectingKdTree::medianSort (std::vector<std::vector<qint32>> &ve
 
     for (int i = start; i <= end; i++)
     {
-       if (vertIndices[otherAxis][i] == medianIdx)
+       if (vertIndices[1][i] == medianIdx)
        {
            continue;
        }
        else
        {
            qint32 tempAxis = axis;
-           while(m_surface.rr(vertIndices[otherAxis][i],tempAxis) == m_surface.rr(medianIdx,tempAxis))
+           while(m_surface.rr(vertIndices[1][i],tempAxis) == m_surface.rr(medianIdx,tempAxis))
            {
                tempAxis++;
                tempAxis = tempAxis % 3;
            }
-           if (m_surface.rr(vertIndices[otherAxis][i],tempAxis) < m_surface.rr(medianIdx,tempAxis))
+           if (m_surface.rr(vertIndices[1][i],tempAxis) < m_surface.rr(medianIdx,tempAxis))
            {
-               vertIndices[axis][begin] = vertIndices[otherAxis][i];
+               vertIndices[0][begin] = vertIndices[1][i];
                begin++;
            }
            else
            {
-               vertIndices[axis][med] = vertIndices[otherAxis][i];
+               vertIndices[0][med] = vertIndices[1][i];
                med++;
            }
        }
@@ -216,37 +216,38 @@ inline qint32 ProjectingKdTree::medianSort (std::vector<std::vector<qint32>> &ve
     /////////////////////
     med = mid + 1;
     begin = start;
-    axis = (axis + 1) % 3;
+    //axis = (axis + 1) % 3;
     otherAxis = (axis + 1) % 3;
+
     for (int i = start; i <= end; i++)
     {
-       if (vertIndices[otherAxis][i] == medianIdx)
+       if (vertIndices[2][i] == medianIdx)
        {
            continue;
        }
        else
        {
            qint32 tempAxis = axis;
-           while(m_surface.rr(vertIndices[otherAxis][i],tempAxis) == m_surface.rr(medianIdx,tempAxis))
+           while(m_surface.rr(vertIndices[2][i],tempAxis) == m_surface.rr(medianIdx,tempAxis))
            {
                tempAxis++;
                tempAxis = tempAxis % 3;
            }
-           if (m_surface.rr(vertIndices[otherAxis][i],tempAxis) < m_surface.rr(medianIdx,tempAxis))
+           if (m_surface.rr(vertIndices[2][i],tempAxis) < m_surface.rr(medianIdx,tempAxis))
            {
-               vertIndices[axis][begin] = vertIndices[otherAxis][i];
+               vertIndices[1][begin] = vertIndices[2][i];
                begin++;
            }
            else
            {
-               vertIndices[axis][med] = vertIndices[otherAxis][i];
+               vertIndices[1][med] = vertIndices[2][i];
                med++;
            }
        }
 
     }
     //todo tempvec zurück
-    vertIndices[otherAxis]= std::move(tempVec);
+    vertIndices[2]= std::move(tempVec);
     return mid;
 
 //    switch(axis)
