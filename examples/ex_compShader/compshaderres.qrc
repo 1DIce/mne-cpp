@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>testShader.comp</file>
+        <file>hellotriangle.frag</file>
+        <file>hellotriangle.vert</file>
+    </qresource>
+</RCC>
