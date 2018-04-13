@@ -1,16 +1,15 @@
 //=============================================================================================================
 /**
-* @file     extensionmanager.h
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
-*           Lars Debor <lars.debor@tu-ilmenau.de>;
+* @file     analyzecore.h
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
 *           Simon Heinke <simon.heinke@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     February, 2017
+* @date     March, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017, Christoph Dinh, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -31,19 +30,20 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains the declaration of the ExtensionManager class.
+* @brief     AnalyzeCore class declaration.
 *
 */
 
-#ifndef EXTENSIONMANAGER_H
-#define EXTENSIONMANAGER_H
+#ifndef MNEANALYZE_ANALYZECORE_H
+#define MNEANALYZE_ANALYZECORE_H
+
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
-#include "../anshared_global.h"
+#include "mainwindow.h"
 
 
 //*************************************************************************************************************
@@ -51,17 +51,14 @@
 // QT INCLUDES
 //=============================================================================================================
 
-#include <QVector>
-#include <QPluginLoader>
+#include <QSharedPointer>
+#include <QPointer>
 
 
 //*************************************************************************************************************
 //=============================================================================================================
-// DEFINE NAMESPACE ANSHAREDLIB
+// Eigen INCLUDES
 //=============================================================================================================
-
-namespace ANSHAREDLIB
-{
 
 
 //*************************************************************************************************************
@@ -69,75 +66,79 @@ namespace ANSHAREDLIB
 // FORWARD DECLARATIONS
 //=============================================================================================================
 
-class IExtension;
-class AnalyzeSettings;
-class AnalyzeData;
+namespace ANSHAREDLIB
+{
+    class IExtension;
+    class ExtensionManager;
+    class AnalyzeData;
+    class AnalyzeSettings;
+}
+
+//*************************************************************************************************************
+//=============================================================================================================
+// DEFINE NAMESPACE MNEANALYZE
+//=============================================================================================================
+
+namespace MNEANALYZE {
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// MNEANALYZE FORWARD DECLARATIONS
+//=============================================================================================================
 
 
 //=============================================================================================================
 /**
-* DECLARE CLASS ExtensionManager
+* Description of what this class is intended to do (in detail).
 *
-* @brief The ExtensionManager class provides a dynamic plugin loader. As well as the handling of the loaded extensions.
+* @brief Brief description of this class.
 */
-class ANSHAREDSHARED_EXPORT ExtensionManager : public QPluginLoader
+class AnalyzeCore
 {
-    Q_OBJECT
+
 public:
-    typedef QSharedPointer<ExtensionManager> SPtr;               /**< Shared pointer type for ExtensionManager. */
-    typedef QSharedPointer<const ExtensionManager> ConstSPtr;    /**< Const shared pointer type for ExtensionManager. */
+    typedef QSharedPointer<AnalyzeCore> SPtr;            /**< Shared pointer type for AnalyzeCore. */
+    typedef QSharedPointer<const AnalyzeCore> ConstSPtr; /**< Const shared pointer type for AnalyzeCore. */
 
     //=========================================================================================================
     /**
-    * Constructs a ExtensionManager with the given parent.
-    *
-    * @param[in] parent pointer to parent Object. (It's normally the default value.)
+    * Constructs a AnalyzeCore object.
     */
-    ExtensionManager(QObject* parent = 0);
+    AnalyzeCore();
+
+    ~AnalyzeCore();
+
+    void showMainWindow();
+
+    QPointer<MainWindow> getMainWindow();
 
     //=========================================================================================================
     /**
-    * Destroys the ExtensionManager.
+    * Initializes the global settings
     */
-    virtual ~ExtensionManager();
+    void initGlobalSettings();
 
     //=========================================================================================================
     /**
-    * Loads extensions from given directory.
-    *
-    * @param [in] dir    the plugin directory.
+    * Initializes the global data base
     */
-    void loadExtension(const QString& dir);
+    void initGlobalData();
 
-    //=========================================================================================================
-    /**
-    * Initializes the extensions.
-    *
-    * @param [in] settings      the global mne analyze settings
-    * @param [in] data          the global mne analyze data
-    */
-    void initExtensions(QSharedPointer<AnalyzeSettings>& settings, QSharedPointer<AnalyzeData>& data);
-
-    //=========================================================================================================
-    /**
-    * Finds index of extension by name.
-    *
-    * @param [in] name  the extension name.
-    *
-    * @return index of extension.
-    */
-    int findByName(const QString& name);
-
-    //=========================================================================================================
-    /**
-    * Returns vector containing all extensions.
-    *
-    * @return reference to vector containing all extensions.
-    */
-    inline const QVector<IExtension*>& getExtensions();
+protected:
 
 private:
-    QVector<IExtension*>    m_qVecExtensions;       /**< Vector containing all extensions. */
+
+    void initExtensionManager();
+    void initMainWindow();
+
+
+
+    QSharedPointer<ANSHAREDLIB::ExtensionManager>   m_pExtensionManager;    /**< Holds extension manager.*/
+    QPointer<MainWindow>                            m_pMainWindow;
+    QSharedPointer<ANSHAREDLIB::AnalyzeSettings>    m_analyzeSettings;  /**< The global settings.*/
+    QSharedPointer<ANSHAREDLIB::AnalyzeData>        m_analyzeData;      /**< The global data base.*/
+
 };
 
 
@@ -146,11 +147,7 @@ private:
 // INLINE DEFINITIONS
 //=============================================================================================================
 
-inline const QVector<IExtension*>& ExtensionManager::getExtensions()
-{
-    return m_qVecExtensions;
-}
 
-} // NAMESPACE
+} // namespace MNEANALYZE
 
-#endif // EXTENSIONMANAGER_H
+#endif // MNEANALYZE_ANALYZECORE_H

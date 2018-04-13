@@ -1,14 +1,14 @@
 //=============================================================================================================
 /**
-* @file     dipolefit.cpp
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
+* @file     abstractdata.h
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     February, 2017
+* @date     March, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017 Christoph Dinh and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -29,124 +29,101 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains the implementation of the DipoleFit class.
+* @brief     AbstractData class declaration.
 *
 */
+
+#ifndef ANSHAREDLIB_ABSTRACTDATA_H
+#define ANSHAREDLIB_ABSTRACTDATA_H
+
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
-#include "dipolefit.h"
-#include "FormFiles/dipolefitcontrol.h"
+#include "../anshared_global.h"
 
 
 //*************************************************************************************************************
 //=============================================================================================================
-// USED NAMESPACES
+// QT INCLUDES
 //=============================================================================================================
 
-using namespace DIPOLEFITEXTENSION;
-using namespace ANSHAREDLIB;
+#include <QSharedPointer>
 
 
 //*************************************************************************************************************
 //=============================================================================================================
-// DEFINE MEMBER METHODS
+// Eigen INCLUDES
 //=============================================================================================================
 
-DipoleFit::DipoleFit()
-: m_pControl(Q_NULLPTR)
-, m_pDipoleFitControl(Q_NULLPTR)
-{
 
-}
+//*************************************************************************************************************
+//=============================================================================================================
+// FORWARD DECLARATIONS
+//=============================================================================================================
 
 
 //*************************************************************************************************************
+//=============================================================================================================
+// DEFINE NAMESPACE ANSHAREDLIB
+//=============================================================================================================
 
-DipoleFit::~DipoleFit()
-{
-
-}
-
-
-//*************************************************************************************************************
-
-QSharedPointer<IExtension> DipoleFit::clone() const
-{
-    QSharedPointer<DipoleFit> pDipoleFitClone(new DipoleFit);
-    return pDipoleFitClone;
-}
+namespace ANSHAREDLIB {
 
 
 //*************************************************************************************************************
+//=============================================================================================================
+// ANSHAREDLIB FORWARD DECLARATIONS
+//=============================================================================================================
 
-void DipoleFit::init()
+class DataSettings;
+
+
+//=============================================================================================================
+/**
+* Description of what this class is intended to do (in detail).
+*
+* @brief Brief description of this class.
+*/
+class ANSHAREDSHARED_EXPORT AbstractData
 {
-    m_pDipoleFitControl = new DipoleFitControl;
-}
+
+public:
+    typedef QSharedPointer<AbstractData> SPtr;            /**< Shared pointer type for AbstractData. */
+    typedef QSharedPointer<const AbstractData> ConstSPtr; /**< Const shared pointer type for AbstractData. */
+
+    //=========================================================================================================
+    /**
+    * Constructs a AbstractData object.
+    */
+    AbstractData();
+
+    //=========================================================================================================
+    /**
+    * Destructor.
+    */
+    virtual ~AbstractData();
+
+    virtual void initiSettings() = 0;
+
+    virtual QSharedPointer<DataSettings> getSettings();
+
+protected:
+
+    QSharedPointer<DataSettings>            m_pSettings;
+
+
+};
 
 
 //*************************************************************************************************************
-
-void DipoleFit::unload()
-{
-
-}
+//=============================================================================================================
+// INLINE DEFINITIONS
+//=============================================================================================================
 
 
-//*************************************************************************************************************
+} // namespace ANSHAREDLIB
 
-QString DipoleFit::getName() const
-{
-    return "Dipole Fit";
-}
-
-
-//*************************************************************************************************************
-
-QMenu *DipoleFit::getMenu()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-QDockWidget *DipoleFit::getControl()
-{
-    if(!m_pControl) {
-        m_pControl = new QDockWidget(tr("Dipole Fit"));
-        m_pControl->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-        m_pControl->setMinimumWidth(180);
-        m_pControl->setWidget(m_pDipoleFitControl);
-    }
-
-    return m_pControl;
-}
-
-
-//*************************************************************************************************************
-
-QWidget *DipoleFit::getView()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::handleEvent(Event e)
-{
-
-}
-
-
-//*************************************************************************************************************
-
-QVector<Event::EVENT_TYPE> DipoleFit::getEventSubscriptions(void) const
-{
-    return QVector<Event::EVENT_TYPE>();
-}
+#endif // ANSHAREDLIB_ABSTRACTDATA_H

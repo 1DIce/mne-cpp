@@ -1,15 +1,15 @@
 //=============================================================================================================
 /**
-* @file     main.cpp
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
-*           Lorenz Esch <Lorenz.Esch@tu-ilmenau.de>;
+* @file     event.h
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
+*           Simon Heinke <simon.heinke@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     January, 2017
+* @date     April, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017 Christoph Dinh, Lorenz Esch and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -30,38 +30,36 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Implements the mne_analyze GUI application.
+* @brief    Event class declaration.
 *
 */
+
+#ifndef ANSHAREDLIB_EVENT_H
+#define ANSHAREDLIB_EVENT_H
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
-#include <stdio.h>
-#include "info.h"
-#include "analyzecore.h"
-
+#include "../anshared_global.h"
 
 //*************************************************************************************************************
 //=============================================================================================================
-// Qt INCLUDES
+// QT INCLUDES
 //=============================================================================================================
 
-#include <QtGui>
-#include <QApplication>
-#include <QDateTime>
-#include <QSplashScreen>
-#include <QThread>
-
+#include <QSharedPointer>
+#include <QPointer>
+#include <QVariant>
 
 //*************************************************************************************************************
 //=============================================================================================================
-// USED NAMESPACES
+// DEFINE NAMESPACE ANSHAREDLIB
 //=============================================================================================================
 
-using namespace MNEANALYZE;
+namespace ANSHAREDLIB
+{
 
 
 //*************************************************************************************************************
@@ -69,30 +67,81 @@ using namespace MNEANALYZE;
 // FORWARD DECLARATIONS
 //=============================================================================================================
 
+class Communicator;
+
+//=========================================================================================================
+/**
+* DECLARE CLASS Event
+*
+* @brief Event class for inter-Extension communication
+*/
+class ANSHAREDSHARED_EXPORT Event
+{
+public:
+    typedef QSharedPointer<Event> SPtr;            /**< Shared pointer type for Event. */
+    typedef QSharedPointer<const Event> ConstSPtr; /**< Const shared pointer type for Event. */
+
+    //=========================================================================================================
+    /**
+    * Public enum for all available Event types.
+    */
+    enum EVENT_TYPE
+    {
+        PING,
+        DEFAULT
+    };
+
+    //=========================================================================================================
+    /**
+    * Constructs an Event object.
+    */
+    Event(const EVENT_TYPE type, const Communicator* sender, const QVariant data);
+
+    //=========================================================================================================
+    /**
+    * @brief Getter for Event type.
+    *
+    * @return Type of the Event.
+    */
+    inline EVENT_TYPE getType();
+
+    //=========================================================================================================
+    /**
+    * @brief Getter for Event Sender
+    *
+    * @return Sender of the Event.
+    */
+    inline const Communicator *getSender();
+
+    //=========================================================================================================
+    /**
+    * @brief Destructor
+    */
+    ~Event();
+
+private:
+    EVENT_TYPE m_eventType;             /**< Type of the respective Event instance. */
+    const Communicator* m_sender;       /**< Sender of the Event. */
+    const QVariant& m_data;             /**< Attached Data (can be empty). */
+};
 
 //*************************************************************************************************************
+//=============================================================================================================
+// INLINE DEFINITIONS
+//=============================================================================================================
 
-AnalyzeCore *pAnalyzeCore;
-
-int main(int argc, char *argv[])
+inline Event::EVENT_TYPE Event::getType()
 {
-    QApplication a(argc, argv);
-
-    //set application settings
-    QCoreApplication::setOrganizationName(CInfo::OrganizationName());
-    QCoreApplication::setApplicationName(CInfo::AppNameShort());
-
-    //show splash screen for 1 second
-    QPixmap pixmap(":/resources/images/splashscreen_mne_analyze.png");
-    QSplashScreen splash(pixmap);
-    splash.show();
-    QThread::sleep(1);
-
-    //New main window instance
-    pAnalyzeCore = new AnalyzeCore();
-    pAnalyzeCore->showMainWindow();
-
-    splash.finish(pAnalyzeCore->getMainWindow());
-
-    return a.exec();
+    return m_eventType;
 }
+
+//=============================================================================================================
+
+inline const Communicator* Event::getSender()
+{
+    return m_sender;
+}
+
+} // NAMESPACE
+
+#endif // ANSHAREDLIB_EVENT_H

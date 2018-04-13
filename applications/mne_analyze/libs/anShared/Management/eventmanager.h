@@ -1,16 +1,15 @@
 //=============================================================================================================
 /**
-* @file     extensionmanager.h
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
-*           Lars Debor <lars.debor@tu-ilmenau.de>;
+* @file     eventmanager.h
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
 *           Simon Heinke <simon.heinke@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     February, 2017
+* @date     April, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017, Christoph Dinh, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -31,12 +30,12 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains the declaration of the ExtensionManager class.
+* @brief    EventManager class declaration.
 *
 */
 
-#ifndef EXTENSIONMANAGER_H
-#define EXTENSIONMANAGER_H
+#ifndef ANSHAREDLIB_EVENT_MANAGER_H
+#define ANSHAREDLIB_EVENT_MANAGER_H
 
 //*************************************************************************************************************
 //=============================================================================================================
@@ -44,16 +43,16 @@
 //=============================================================================================================
 
 #include "../anshared_global.h"
-
+#include "event.h"
 
 //*************************************************************************************************************
 //=============================================================================================================
 // QT INCLUDES
 //=============================================================================================================
 
-#include <QVector>
-#include <QPluginLoader>
-
+#include <QSharedPointer>
+#include <QPointer>
+#include <QMultiMap>
 
 //*************************************************************************************************************
 //=============================================================================================================
@@ -69,88 +68,73 @@ namespace ANSHAREDLIB
 // FORWARD DECLARATIONS
 //=============================================================================================================
 
-class IExtension;
-class AnalyzeSettings;
-class AnalyzeData;
+class Communicator;
 
-
-//=============================================================================================================
+//=========================================================================================================
 /**
-* DECLARE CLASS ExtensionManager
+* DECLARE CLASS EventManager
 *
-* @brief The ExtensionManager class provides a dynamic plugin loader. As well as the handling of the loaded extensions.
+* @brief EventManager for Event communication
 */
-class ANSHAREDSHARED_EXPORT ExtensionManager : public QPluginLoader
+class ANSHAREDSHARED_EXPORT EventManager
 {
-    Q_OBJECT
 public:
-    typedef QSharedPointer<ExtensionManager> SPtr;               /**< Shared pointer type for ExtensionManager. */
-    typedef QSharedPointer<const ExtensionManager> ConstSPtr;    /**< Const shared pointer type for ExtensionManager. */
+    typedef QSharedPointer<EventManager> SPtr;            /**< Shared pointer type for EventManager. */
+    typedef QSharedPointer<const EventManager> ConstSPtr; /**< Const shared pointer type for EventManager. */
 
     //=========================================================================================================
     /**
-    * Constructs a ExtensionManager with the given parent.
-    *
-    * @param[in] parent pointer to parent Object. (It's normally the default value.)
+    * Deleted default constructor (static class).
     */
-    ExtensionManager(QObject* parent = 0);
+    EventManager() = delete;
 
     //=========================================================================================================
     /**
-    * Destroys the ExtensionManager.
-    */
-    virtual ~ExtensionManager();
+     * @brief addCommunicator Adds a Communicator, respectively its subscriptions to the routing table
+     * @param commu The Communicator to add
+     */
+    static void addCommunicator(Communicator* commu);
 
     //=========================================================================================================
     /**
-    * Loads extensions from given directory.
-    *
-    * @param [in] dir    the plugin directory.
-    */
-    void loadExtension(const QString& dir);
+     * @brief issueEvent Communicate an event to all entities that have registered for the respective
+     *        event type
+     *
+     * @param e The event to publish
+     */
+    static void issueEvent(Event e);
 
     //=========================================================================================================
+
     /**
-    * Initializes the extensions.
-    *
-    * @param [in] settings      the global mne analyze settings
-    * @param [in] data          the global mne analyze data
-    */
-    void initExtensions(QSharedPointer<AnalyzeSettings>& settings, QSharedPointer<AnalyzeData>& data);
+     * @brief addSubscriptions Add the specified list of Event types to the routing table
+     * @param commu The respective Communicator
+     * @param newsubs List of new (additional) subscriptions
+     */
+    static void addSubscriptions(Communicator* commu, QVector<Event::EVENT_TYPE> newsubs);
 
     //=========================================================================================================
+
     /**
-    * Finds index of extension by name.
-    *
-    * @param [in] name  the extension name.
-    *
-    * @return index of extension.
-    */
-    int findByName(const QString& name);
+     * @brief updateSubscriptions Replaces a Communicators subscriptions with the provided list
+     * @param commu The respective Communicator
+     * @param subs New list of subscriptions
+     */
+    static void updateSubscriptions(Communicator* commu, QVector<Event::EVENT_TYPE> subs);
 
     //=========================================================================================================
+
     /**
-    * Returns vector containing all extensions.
-    *
-    * @return reference to vector containing all extensions.
-    */
-    inline const QVector<IExtension*>& getExtensions();
+     * @brief removeCommunicator Removes (and thus disconnects) a Communicator from the routing table
+     * @param commu The communicator to remove.
+     */
+    static void removeCommunicator(Communicator* commu);
+    //=========================================================================================================
 
 private:
-    QVector<IExtension*>    m_qVecExtensions;       /**< Vector containing all extensions. */
+    static QMultiMap<Event::EVENT_TYPE, Communicator*> m_routingTable;
 };
 
+} // namespace
 
-//*************************************************************************************************************
-//=============================================================================================================
-// INLINE DEFINITIONS
-//=============================================================================================================
-
-inline const QVector<IExtension*>& ExtensionManager::getExtensions()
-{
-    return m_qVecExtensions;
-}
-
-} // NAMESPACE
-
-#endif // EXTENSIONMANAGER_H
+#endif // ANSHAREDLIB_EVENT_MANAGER_H

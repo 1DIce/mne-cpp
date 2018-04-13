@@ -1,14 +1,15 @@
 //=============================================================================================================
 /**
-* @file     dipolefit.cpp
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
-*           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
+* @file     types.h
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
+*           Matti Hamalainen <msh@nmr.mgh.harvard.edu>;
+*
 * @version  1.0
-* @date     February, 2017
+* @date     March, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017 Christoph Dinh and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -29,17 +30,26 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains the implementation of the DipoleFit class.
+* @brief    Contains general application specific types
 *
 */
+#ifndef TYPES_H
+#define TYPES_H
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
-#include "dipolefit.h"
-#include "FormFiles/dipolefitcontrol.h"
+#include <Eigen/Core>
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// Qt INCLUDES
+//=============================================================================================================
+
+#include <QSharedPointer>
 
 
 //*************************************************************************************************************
@@ -47,106 +57,22 @@
 // USED NAMESPACES
 //=============================================================================================================
 
-using namespace DIPOLEFITEXTENSION;
-using namespace ANSHAREDLIB;
+using namespace Eigen;
 
 
 //*************************************************************************************************************
 //=============================================================================================================
-// DEFINE MEMBER METHODS
+// DEFINE NAMESPACE MNEANALYZE
 //=============================================================================================================
 
-DipoleFit::DipoleFit()
-: m_pControl(Q_NULLPTR)
-, m_pDipoleFitControl(Q_NULLPTR)
+namespace MNEANALYZE
 {
 
-}
 
 
-//*************************************************************************************************************
+} //NAMESPACE
 
-DipoleFit::~DipoleFit()
-{
-
-}
+Q_DECLARE_METATYPE(Eigen::Vector3f);
 
 
-//*************************************************************************************************************
-
-QSharedPointer<IExtension> DipoleFit::clone() const
-{
-    QSharedPointer<DipoleFit> pDipoleFitClone(new DipoleFit);
-    return pDipoleFitClone;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::init()
-{
-    m_pDipoleFitControl = new DipoleFitControl;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::unload()
-{
-
-}
-
-
-//*************************************************************************************************************
-
-QString DipoleFit::getName() const
-{
-    return "Dipole Fit";
-}
-
-
-//*************************************************************************************************************
-
-QMenu *DipoleFit::getMenu()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-QDockWidget *DipoleFit::getControl()
-{
-    if(!m_pControl) {
-        m_pControl = new QDockWidget(tr("Dipole Fit"));
-        m_pControl->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-        m_pControl->setMinimumWidth(180);
-        m_pControl->setWidget(m_pDipoleFitControl);
-    }
-
-    return m_pControl;
-}
-
-
-//*************************************************************************************************************
-
-QWidget *DipoleFit::getView()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::handleEvent(Event e)
-{
-
-}
-
-
-//*************************************************************************************************************
-
-QVector<Event::EVENT_TYPE> DipoleFit::getEventSubscriptions(void) const
-{
-    return QVector<Event::EVENT_TYPE>();
-}
+#endif // TYPES_H

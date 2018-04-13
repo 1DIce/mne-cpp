@@ -42,7 +42,6 @@
 //=============================================================================================================
 
 #include "stcbrowser_global.h"
-
 #include <anShared/Interfaces/IExtension.h>
 
 
@@ -114,6 +113,9 @@ public:
     virtual QMenu* getMenu();
     virtual QDockWidget* getControl();
     virtual QWidget* getView();
+
+    virtual void handleEvent(ANSHAREDLIB::Event e);
+    virtual QVector<ANSHAREDLIB::Event::EVENT_TYPE> getEventSubscriptions() const;
 
 protected:
 

@@ -81,15 +81,39 @@ win32 {
 SOURCES += \
     Management/analyzedata.cpp \
     Management/analyzesettings.cpp \
-    Management/extensionmanager.cpp
+    Management/extensionmanager.cpp \
+    Data/datastorage.cpp \
+    Data/abstractdata.cpp \
+    Data/datasettings.cpp \
+    Data/surfacesetdata.cpp \
+    Data/surfacedata.cpp \
+    Data/surfacesettings.cpp \
+    Model/modelstorage.cpp \
+    Model/surfacemodel.cpp \
+    Management/event.cpp \
+    Management/communicator.cpp \
+    Management/eventmanager.cpp
 
 HEADERS += \
     anshared_global.h \
-    Interfaces/IExtension.h \
     Management/analyzedata.h \
     Management/analyzesettings.h \
     Management/extensionmanager.h \
-    Interfaces/IStandardView.h
+    Interfaces/IStandardView.h \
+    Interfaces/IExtension.h \
+    Data/datastorage.h \
+    Data/abstractdata.h \
+    Data/datasettings.h \
+    Data/surfacesetdata.h \
+    Data/surfacedata.h \
+    Data/surfacesettings.h \
+    Model/modelstorage.h \
+    Model/surfacemodel.h \
+    Utils/types.h \
+    anshared_global.h \
+    Management/event.h \
+    Management/communicator.h \
+    Management/eventmanager.h
 
 
 INCLUDEPATH += $${EIGEN_INCLUDE_DIR}

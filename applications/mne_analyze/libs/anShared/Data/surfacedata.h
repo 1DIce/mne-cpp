@@ -1,16 +1,14 @@
 //=============================================================================================================
 /**
-* @file     extensionmanager.h
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
-*           Lars Debor <lars.debor@tu-ilmenau.de>;
-*           Simon Heinke <simon.heinke@tu-ilmenau.de>;
+* @file     surfacedata.h
+* @author   Lars Debor <lars.debor@tu-ilmenaul.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     February, 2017
+* @date     March, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017, Christoph Dinh, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -31,19 +29,22 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains the declaration of the ExtensionManager class.
+* @brief     SurfaceData class declaration.
 *
 */
 
-#ifndef EXTENSIONMANAGER_H
-#define EXTENSIONMANAGER_H
+#ifndef ANSHAREDLIB_SURFACEDATA_H
+#define ANSHAREDLIB_SURFACEDATA_H
+
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
+#include "abstractdata.h"
 #include "../anshared_global.h"
+#include <fs/surface.h>
 
 
 //*************************************************************************************************************
@@ -51,17 +52,15 @@
 // QT INCLUDES
 //=============================================================================================================
 
-#include <QVector>
-#include <QPluginLoader>
+#include <QSharedPointer>
 
 
 //*************************************************************************************************************
 //=============================================================================================================
-// DEFINE NAMESPACE ANSHAREDLIB
+// Eigen INCLUDES
 //=============================================================================================================
 
-namespace ANSHAREDLIB
-{
+#include <Eigen/Core>
 
 
 //*************************************************************************************************************
@@ -69,88 +68,151 @@ namespace ANSHAREDLIB
 // FORWARD DECLARATIONS
 //=============================================================================================================
 
-class IExtension;
-class AnalyzeSettings;
-class AnalyzeData;
+
+//*************************************************************************************************************
+//=============================================================================================================
+// DEFINE NAMESPACE ANSHAREDLIB
+//=============================================================================================================
+
+namespace ANSHAREDLIB {
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// ANSHAREDLIB FORWARD DECLARATIONS
+//=============================================================================================================
 
 
 //=============================================================================================================
 /**
-* DECLARE CLASS ExtensionManager
+* This is a wrapper class for Surface.
 *
-* @brief The ExtensionManager class provides a dynamic plugin loader. As well as the handling of the loaded extensions.
+* @brief This is a wrapper class for Surface.
 */
-class ANSHAREDSHARED_EXPORT ExtensionManager : public QPluginLoader
+class ANSHAREDSHARED_EXPORT SurfaceData : public AbstractData
 {
-    Q_OBJECT
+
 public:
-    typedef QSharedPointer<ExtensionManager> SPtr;               /**< Shared pointer type for ExtensionManager. */
-    typedef QSharedPointer<const ExtensionManager> ConstSPtr;    /**< Const shared pointer type for ExtensionManager. */
+    typedef QSharedPointer<SurfaceData> SPtr;            /**< Shared pointer type for SurfaceData. */
+    typedef QSharedPointer<const SurfaceData> ConstSPtr; /**< Const shared pointer type for SurfaceData. */
 
     //=========================================================================================================
     /**
-    * Constructs a ExtensionManager with the given parent.
-    *
-    * @param[in] parent pointer to parent Object. (It's normally the default value.)
+    * Default Constructor.
     */
-    ExtensionManager(QObject* parent = 0);
+    SurfaceData();
 
     //=========================================================================================================
     /**
-    * Destroys the ExtensionManager.
+    * Construts the surface by reading it of the given file.
+    *
+    * @param[in] p_sFile    Surface file name with path
     */
-    virtual ~ExtensionManager();
+    explicit SurfaceData(const QString& p_sFile);
 
     //=========================================================================================================
     /**
-    * Loads extensions from given directory.
+    * Construts the surface by reading it of the given file.
     *
-    * @param [in] dir    the plugin directory.
+    * @param[in] subject_id         Name of subject
+    * @param[in] hemi               Which hemisphere to load {0 -> lh, 1 -> rh}
+    * @param[in] surf               Name of the surface to load (eg. inflated, orig ...)
+    * @param[in] subjects_dir       Subjects directory
     */
-    void loadExtension(const QString& dir);
+    explicit SurfaceData(const QString &subject_id, qint32 hemi, const QString &surf, const QString &subjects_dir);
 
     //=========================================================================================================
     /**
-    * Initializes the extensions.
-    *
-    * @param [in] settings      the global mne analyze settings
-    * @param [in] data          the global mne analyze data
+    * Default Destructor.
     */
-    void initExtensions(QSharedPointer<AnalyzeSettings>& settings, QSharedPointer<AnalyzeData>& data);
+    ~SurfaceData() = default;
+
+    void initiSettings() override;
 
     //=========================================================================================================
     /**
-    * Finds index of extension by name.
+    * Returns whether SurfaceData is empty.
     *
-    * @param [in] name  the extension name.
-    *
-    * @return index of extension.
+    * @return true if is empty, false otherwise
     */
-    int findByName(const QString& name);
+    inline bool isEmpty() const;
 
     //=========================================================================================================
     /**
-    * Returns vector containing all extensions.
+    * Coordinates of vertices (rr)
     *
-    * @return reference to vector containing all extensions.
+    * @return coordinates of vertices
     */
-    inline const QVector<IExtension*>& getExtensions();
+    inline const Eigen::MatrixX3f& vertices() const;
+
+    Eigen::Vector3f vertexAt(int idx) const;
+
+    //=========================================================================================================
+    /**
+    * Normalized surface normals for each vertex
+    *
+    * @return surface normals
+    */
+    inline const Eigen::MatrixX3f& normals() const;
+
+    Eigen::Vector3f normalAt(int idx) const;
+
+    //=========================================================================================================
+    /**
+    * The triangle descriptions
+    *
+    * @return triangle descriptions
+    */
+    inline const Eigen::MatrixX3i& tris() const;
+
+protected:
 
 private:
-    QVector<IExtension*>    m_qVecExtensions;       /**< Vector containing all extensions. */
-};
 
+    FSLIB::Surface      m_surface;
+
+    //TODO SETTINGS: hemi, surfname, path, offset, filename
+
+};
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INLINE DEFINITIONS
 //=============================================================================================================
 
-inline const QVector<IExtension*>& ExtensionManager::getExtensions()
+bool SurfaceData::isEmpty() const
 {
-    return m_qVecExtensions;
+    return m_surface.isEmpty();
 }
 
-} // NAMESPACE
 
-#endif // EXTENSIONMANAGER_H
+//*************************************************************************************************************
+
+const Eigen::MatrixX3f &SurfaceData::vertices() const
+{
+    return m_surface.rr();
+}
+
+
+//*************************************************************************************************************
+
+const Eigen::MatrixX3f &SurfaceData::normals() const
+{
+    return m_surface.nn();
+}
+
+
+//*************************************************************************************************************
+
+const Eigen::MatrixX3i &SurfaceData::tris() const
+{
+    return m_surface.tris();
+}
+
+
+//*************************************************************************************************************
+
+
+} // namespace ANSHAREDLIB
+
+#endif // ANSHAREDLIB_SURFACEDATA_H

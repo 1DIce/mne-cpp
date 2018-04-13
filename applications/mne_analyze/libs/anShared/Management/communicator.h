@@ -1,14 +1,15 @@
 //=============================================================================================================
 /**
-* @file     IExtension.h
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
+* @file     communicator.h
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
+*           Simon Heinke <simon.heinke@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     February, 2017
+* @date     April, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017 Christoph Dinh and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -29,12 +30,12 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains declaration of IExtension interface class.
+* @brief    Communicator class declaration.
 *
 */
 
-#ifndef IEXTENSION_H
-#define IEXTENSION_H
+#ifndef ANSHAREDLIB_COMMUNICATOR_H
+#define ANSHAREDLIB_COMMUNICATOR_H
 
 //*************************************************************************************************************
 //=============================================================================================================
@@ -42,7 +43,7 @@
 //=============================================================================================================
 
 #include "../anshared_global.h"
-#include "../Management/event.h"
+#include "event.h"
 
 //*************************************************************************************************************
 //=============================================================================================================
@@ -50,10 +51,9 @@
 //=============================================================================================================
 
 #include <QObject>
-#include <QMenu>
-#include <QDockWidget>
 #include <QSharedPointer>
-
+#include <QPointer>
+#include <QVector>
 
 //*************************************************************************************************************
 //=============================================================================================================
@@ -63,139 +63,129 @@
 namespace ANSHAREDLIB
 {
 
+
 //*************************************************************************************************************
 //=============================================================================================================
 // FORWARD DECLARATIONS
 //=============================================================================================================
-
-class AnalyzeData;
-class AnalyzeSettings;
-
+class IExtension;
 
 //=========================================================================================================
 /**
-* DECLARE CLASS IExtension
+* DECLARE CLASS Communicator
 *
-* @brief The IExtension class is the base interface class for all extensions.
+* @brief Communicator class for Event communication
 */
-class ANSHAREDSHARED_EXPORT IExtension : public QObject
+class ANSHAREDSHARED_EXPORT Communicator : public QObject
 {
     Q_OBJECT
 public:
-    typedef QSharedPointer<IExtension> SPtr;               /**< Shared pointer type for IExtension. */
-    typedef QSharedPointer<const IExtension> ConstSPtr;    /**< Const shared pointer type for IExtension. */
+    typedef QSharedPointer<Communicator> SPtr;            /**< Shared pointer type for GeometryInfo. */
+    typedef QSharedPointer<const Communicator> ConstSPtr; /**< Const shared pointer type for GeometryInfo. */
+
+    typedef long CommunicatorID;                        /**< Typedef for CommunicatorID. */
 
     //=========================================================================================================
     /**
-    * Destroys the extension.
-    */
-    virtual ~IExtension() {}
+     * @brief Communicator constructs a Communicator object that emits a signal (receivedEvent) when one of
+     *        the passed list of events happens. A further QtConnect IS necessary (See implementation of
+     *        second constructor for more details. Qt::DirectConnection is recommended.
+     * @param subs The list of relevant events.
+     */
+    Communicator(QVector<Event::EVENT_TYPE> subs = QVector<Event::EVENT_TYPE>());
 
     //=========================================================================================================
     /**
-    * Clone the extension
-    */
-    virtual QSharedPointer<IExtension> clone() const = 0;
+     * @brief Communicator constructs a Communicator object that is connected to the Extensions' handleEvent
+     *        method via a Qt::DirectConnection.
+     * @param extension The Extensions to connect to.
+     */
+    Communicator(IExtension* extension);
 
     //=========================================================================================================
+
     /**
-    * Initializes the extension.
-    */
-    virtual void init() = 0;
+     * @brief Destructs the communicator and disconnects it from the EventManager
+     */
+    ~Communicator();
 
     //=========================================================================================================
+
     /**
-    * Is called when extension unloaded.
-    */
-    virtual void unload() = 0;
+     * @brief publishEvent Sends an Event of type etype into the event system
+     * @param etype Type of the event to be published
+     * @param data Potential data to be attached to the event
+     */
+    void publishEvent(Event::EVENT_TYPE etype, QVariant data = QVariant()) const;
 
     //=========================================================================================================
+
     /**
-    * Returns the plugin name.
-    * Pure virtual method.
-    *
-    * @return the name of plugin.
-    */
-    virtual QString getName() const = 0;
+     * @brief updateSubscriptions Overwrites the Communicators subscriptions. Attention: old subscriptions will
+     *        be deleted! See updateSubscriptions.
+     * @param subs The new list of Event types to be notified about
+     */
+    void updateSubscriptions(QVector<Event::EVENT_TYPE> subs);
 
     //=========================================================================================================
+
     /**
-    * Provides the menu, in case no menu is provided it returns a Q_NULLPTR
-    *
-    * @return the menu
-    */
-    virtual QMenu* getMenu() = 0;
+     * @brief addSubscriptions Adds the provided list of Event types to the preexisting list.
+     * @param newsubs List of new subscriptions.
+     */
+    void addSubscriptions(QVector<Event::EVENT_TYPE> newsubs);
 
     //=========================================================================================================
+
     /**
-    * Provides the control, in case no control is provided it returns a Q_NULLPTR
-    *
-    * @return the control
-    */
-    virtual QDockWidget* getControl() = 0;
+     * @brief addSubscriptions Convenience overload, see addSubscriptions
+     * @param newsub
+     */
+    void addSubscriptions(Event::EVENT_TYPE newsub);
 
     //=========================================================================================================
+
     /**
-    * Provides the view, in case no view is provided it returns a Q_NULLPTR
-    *
-    * @return the view
-    */
-    virtual QWidget* getView() = 0;
+     * @brief manualDisconnect Manually disconnects a Communicator from the Event system.
+     */
+    void manualDisconnect(void);
 
     //=========================================================================================================
+
     /**
-    * Informs the EventManager about all Events that the Extension wants to know about. Can return an empty
-    * vector in case no Events need to be seen by the Extension
-    *
-    * @return The vector of relevant Events
-    */
-    virtual QVector<Event::EVENT_TYPE> getEventSubscriptions(void) const = 0;
+     * @brief getSubscriptions Getter for list of subscriptions
+     * @return List of subscriptions
+     */
+    inline QVector<Event::EVENT_TYPE> getSubscriptions(void) const;
 
     //=========================================================================================================
+
     /**
-    * Sets the global data, which provides the central database
-    *
-    * @param [in] globalData  the global data
-    */
-    virtual inline void setGlobalData(QSharedPointer<AnalyzeData>& globalData);
+     * @brief getID Getter for internal ID
+     * @return Internal ID
+     */
+    inline CommunicatorID getID(void) const;
 
     //=========================================================================================================
-    /**
-    * Returns the global data base
-    *
-    * @return the global data
-    */
-    virtual inline QSharedPointer<AnalyzeData>& globalData();
-
-    //=========================================================================================================
-    /**
-    * Sets the global settings, which provides the mne analyze settings
-    *
-    * @param [in] globalSettings  the global settings
-    */
-    virtual inline void setGlobalSettings(QSharedPointer<AnalyzeSettings>& globalSettings);
-
-    //=========================================================================================================
-    /**
-    * Returns the global settings base
-    *
-    * @return the global settings
-    */
-    virtual inline QSharedPointer<AnalyzeSettings>& globalSettings();
-
-public slots:
-
-    //=========================================================================================================
-    /**
-    * Called by the EventManager in case a subscribed-for Event has happened
-    *
-    * @param e The Event that has taken place
-    */
-    virtual void handleEvent(Event e) = 0;
 
 private:
-    QSharedPointer<AnalyzeData> m_analyzeData;              /**< Pointer to the global data base */
-    QSharedPointer<AnalyzeSettings> m_analyzeSettings;      /**< Pointer to the global analyze settings */
+    static CommunicatorID m_IDCounter;                  /**< ID-Counter for Communicator instances. */
+    inline static CommunicatorID nextID();              /**< Simply increments the counter and returns it. */
+
+    CommunicatorID m_ID;                                /**< Communicator ID. */
+    QVector<Event::EVENT_TYPE> m_EventSubscriptions;    /**< All event types that the Communicator receives*/
+
+
+    //=========================================================================================================
+
+signals: 
+    /**
+    * @brief Called by EventManager whenever an event needs to be handled. This must be connected to some other
+    *        function for actual usage.
+    *
+    * @param e The event that was received
+    */
+    void receivedEvent(Event e);
 
 };
 
@@ -204,37 +194,25 @@ private:
 // INLINE DEFINITIONS
 //=============================================================================================================
 
-void IExtension::setGlobalData(QSharedPointer<AnalyzeData> &data)
+inline Communicator::CommunicatorID Communicator::nextID()
 {
-    m_analyzeData = data;
+    return ++m_IDCounter;
 }
 
+//=============================================================================================================
 
-//*************************************************************************************************************
-
-QSharedPointer<AnalyzeData> &IExtension::globalData()
+inline QVector<Event::EVENT_TYPE> Communicator::getSubscriptions(void) const
 {
-    return m_analyzeData;
+    return m_EventSubscriptions;
 }
 
+//=============================================================================================================
 
-//*************************************************************************************************************
-
-void IExtension::setGlobalSettings(QSharedPointer<AnalyzeSettings> &settings)
+inline Communicator::CommunicatorID Communicator::getID(void) const
 {
-    m_analyzeSettings = settings;
+    return m_ID;
 }
 
+} // namespace
 
-//*************************************************************************************************************
-
-QSharedPointer<AnalyzeSettings> &IExtension::globalSettings()
-{
-    return m_analyzeSettings;
-}
-
-} //Namespace
-
-Q_DECLARE_INTERFACE(ANSHAREDLIB::IExtension, "ansharedlib/1.0")
-
-#endif //IEXTENSION_H
+#endif // ANSHAREDLIB_COMMUNICATOR_H

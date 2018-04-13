@@ -2,13 +2,15 @@
 /**
 * @file     extensionmanager.cpp
 * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
+*           Lars Debor <lars.debor@tu-ilmenau.de>;
+*           Simon Heinke <simon.heinke@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
 * @date     February, 2017
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017, Christoph Dinh and Matti Hamalainen. All rights reserved.
+Copyright (C) 2017, Christoph Dinh, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -40,6 +42,7 @@
 
 #include "extensionmanager.h"
 #include "../Interfaces/IExtension.h"
+#include "eventmanager.h"
 
 
 //*************************************************************************************************************
@@ -75,8 +78,9 @@ ExtensionManager::ExtensionManager(QObject *parent)
 
 ExtensionManager::~ExtensionManager()
 {
-    for(int i = 0; i < m_qVecExtensions.size(); ++i) {
-        delete m_qVecExtensions[i];
+    foreach(IExtension* extension, m_qVecExtensions)
+    {
+        delete extension;
     }
 }
 
@@ -87,7 +91,7 @@ void ExtensionManager::loadExtension(const QString& dir)
 {
     QDir extensionsDir(dir);
 
-    foreach(QString file, extensionsDir.entryList(QDir::Files))
+    foreach(const QString &file, extensionsDir.entryList(QDir::Files))
     {
         fprintf(stderr,"Loading Extension %s... ",file.toUtf8().constData());
 
@@ -117,7 +121,6 @@ void ExtensionManager::initExtensions(QSharedPointer<AnalyzeSettings>& settings,
         extension->init();
     }
 }
-
 
 //*************************************************************************************************************
 

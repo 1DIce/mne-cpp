@@ -1,14 +1,14 @@
 //=============================================================================================================
 /**
-* @file     dipolefit.cpp
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
+* @file     surfacemodel.h
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     February, 2017
+* @date     March, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017 Christoph Dinh and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -29,124 +29,100 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains the implementation of the DipoleFit class.
+* @brief     SurfaceModel class declaration.
 *
 */
+
+#ifndef ANSHAREDLIB_SURFACEMODEL_H
+#define ANSHAREDLIB_SURFACEMODEL_H
+
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
-#include "dipolefit.h"
-#include "FormFiles/dipolefitcontrol.h"
+#include "../Data/surfacedata.h"
+
+//*************************************************************************************************************
+//=============================================================================================================
+// QT INCLUDES
+//=============================================================================================================
+
+#include <QSharedPointer>
+#include <QAbstractTableModel>
 
 
 //*************************************************************************************************************
 //=============================================================================================================
-// USED NAMESPACES
+// Eigen INCLUDES
 //=============================================================================================================
-
-using namespace DIPOLEFITEXTENSION;
-using namespace ANSHAREDLIB;
 
 
 //*************************************************************************************************************
 //=============================================================================================================
-// DEFINE MEMBER METHODS
+// FORWARD DECLARATIONS
 //=============================================================================================================
 
-DipoleFit::DipoleFit()
-: m_pControl(Q_NULLPTR)
-, m_pDipoleFitControl(Q_NULLPTR)
-{
 
-}
+//*************************************************************************************************************
+//=============================================================================================================
+// DEFINE NAMESPACE ANSHAREDLIB
+//=============================================================================================================
+
+namespace ANSHAREDLIB {
 
 
 //*************************************************************************************************************
+//=============================================================================================================
+// ANSHAREDLIB FORWARD DECLARATIONS
+//=============================================================================================================
 
-DipoleFit::~DipoleFit()
+
+//=============================================================================================================
+/**
+* Description of what this class is intended to do (in detail).
+*
+* @brief Brief description of this class.
+*/
+class SurfaceModel : public QAbstractTableModel
 {
 
-}
+public:
+    typedef QSharedPointer<SurfaceModel> SPtr;            /**< Shared pointer type for SurfaceModel. */
+    typedef QSharedPointer<const SurfaceModel> ConstSPtr; /**< Const shared pointer type for SurfaceModel. */
+
+    SurfaceModel() = delete;
+    //=========================================================================================================
+    /**
+    * Constructs a SurfaceModel object.
+    */
+    SurfaceModel(SurfaceData* pSurfaceData);
+
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    virtual int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
+
+
+protected:
+
+private:
+
+    SurfaceData*    m_pSurfaceData;
+
+
+
+};
 
 
 //*************************************************************************************************************
-
-QSharedPointer<IExtension> DipoleFit::clone() const
-{
-    QSharedPointer<DipoleFit> pDipoleFitClone(new DipoleFit);
-    return pDipoleFitClone;
-}
+//=============================================================================================================
+// INLINE DEFINITIONS
+//=============================================================================================================
 
 
-//*************************************************************************************************************
+} // namespace ANSHAREDLIB
 
-void DipoleFit::init()
-{
-    m_pDipoleFitControl = new DipoleFitControl;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::unload()
-{
-
-}
-
-
-//*************************************************************************************************************
-
-QString DipoleFit::getName() const
-{
-    return "Dipole Fit";
-}
-
-
-//*************************************************************************************************************
-
-QMenu *DipoleFit::getMenu()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-QDockWidget *DipoleFit::getControl()
-{
-    if(!m_pControl) {
-        m_pControl = new QDockWidget(tr("Dipole Fit"));
-        m_pControl->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-        m_pControl->setMinimumWidth(180);
-        m_pControl->setWidget(m_pDipoleFitControl);
-    }
-
-    return m_pControl;
-}
-
-
-//*************************************************************************************************************
-
-QWidget *DipoleFit::getView()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::handleEvent(Event e)
-{
-
-}
-
-
-//*************************************************************************************************************
-
-QVector<Event::EVENT_TYPE> DipoleFit::getEventSubscriptions(void) const
-{
-    return QVector<Event::EVENT_TYPE>();
-}
+#endif // ANSHAREDLIB_SURFACEMODEL_H

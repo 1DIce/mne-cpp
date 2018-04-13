@@ -62,8 +62,6 @@
 
 #include <utils/mnemath.h>
 
-#include <iostream>
-
 
 #include <QApplication>
 #include <QCommandLineParser>
@@ -167,6 +165,21 @@ QDockWidget *Music::getControl()
 QWidget *Music::getView()
 {
     return Q_NULLPTR;
+}
+
+//*************************************************************************************************************
+
+void Music::handleEvent(Event e)
+{
+
+}
+
+
+//*************************************************************************************************************
+
+QVector<Event::EVENT_TYPE> Music::getEventSubscriptions(void) const
+{
+    return QVector<Event::EVENT_TYPE>();
 }
 
 

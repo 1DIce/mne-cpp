@@ -1,14 +1,14 @@
 //=============================================================================================================
 /**
-* @file     dipolefit.cpp
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
+* @file     surfacemodel.cpp
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     February, 2017
+* @date     March, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017 Christoph Dinh and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -29,17 +29,30 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains the implementation of the DipoleFit class.
+* @brief    SurfaceModel class definition.
 *
 */
+
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
-#include "dipolefit.h"
-#include "FormFiles/dipolefitcontrol.h"
+#include "surfacemodel.h"
+#include "../Utils/types.h"
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// QT INCLUDES
+//=============================================================================================================
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// Eigen INCLUDES
+//=============================================================================================================
 
 
 //*************************************************************************************************************
@@ -47,8 +60,14 @@
 // USED NAMESPACES
 //=============================================================================================================
 
-using namespace DIPOLEFITEXTENSION;
 using namespace ANSHAREDLIB;
+using namespace Eigen;
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// DEFINE GLOBAL METHODS
+//=============================================================================================================
 
 
 //*************************************************************************************************************
@@ -56,97 +75,45 @@ using namespace ANSHAREDLIB;
 // DEFINE MEMBER METHODS
 //=============================================================================================================
 
-DipoleFit::DipoleFit()
-: m_pControl(Q_NULLPTR)
-, m_pDipoleFitControl(Q_NULLPTR)
+SurfaceModel::SurfaceModel(SurfaceData* pSurfaceData)
+: m_pSurfaceData(pSurfaceData)
 {
 
 }
 
-
-//*************************************************************************************************************
-
-DipoleFit::~DipoleFit()
+int SurfaceModel::rowCount(const QModelIndex &parent) const
 {
-
+    return m_pSurfaceData->vertices().cols();
 }
 
-
-//*************************************************************************************************************
-
-QSharedPointer<IExtension> DipoleFit::clone() const
+int SurfaceModel::columnCount(const QModelIndex &parent) const
 {
-    QSharedPointer<DipoleFit> pDipoleFitClone(new DipoleFit);
-    return pDipoleFitClone;
+    return 2;
 }
 
-
-//*************************************************************************************************************
-
-void DipoleFit::init()
-{
-    m_pDipoleFitControl = new DipoleFitControl;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::unload()
+QVariant SurfaceModel::data(const QModelIndex &index, int role) const
 {
 
-}
+    if(index.isValid()) {
+        QVariant output;
+        if(index.column() == 0 && role == Qt::DisplayRole) {
+            output.setValue(m_pSurfaceData->vertexAt(index.row()));
+            return output;
+        }
 
-
-//*************************************************************************************************************
-
-QString DipoleFit::getName() const
-{
-    return "Dipole Fit";
-}
-
-
-//*************************************************************************************************************
-
-QMenu *DipoleFit::getMenu()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-QDockWidget *DipoleFit::getControl()
-{
-    if(!m_pControl) {
-        m_pControl = new QDockWidget(tr("Dipole Fit"));
-        m_pControl->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-        m_pControl->setMinimumWidth(180);
-        m_pControl->setWidget(m_pDipoleFitControl);
+        if(index.column() == 1 && role == Qt::DisplayRole) {
+            output.setValue(m_pSurfaceData->normalAt(index.row()));
+            return output;
+        }
     }
-
-    return m_pControl;
 }
 
-
-//*************************************************************************************************************
-
-QWidget *DipoleFit::getView()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::handleEvent(Event e)
+QVariant SurfaceModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 
 }
 
 
-//*************************************************************************************************************
 
-QVector<Event::EVENT_TYPE> DipoleFit::getEventSubscriptions(void) const
-{
-    return QVector<Event::EVENT_TYPE>();
-}
+
+//*************************************************************************************************************

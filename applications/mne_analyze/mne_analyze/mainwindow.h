@@ -67,10 +67,7 @@ QT_END_NAMESPACE
 
 namespace ANSHAREDLIB
 {
-    class IExtension;
     class ExtensionManager;
-    class AnalyzeData;
-    class AnalyzeSettings;
 }
 
 
@@ -105,9 +102,10 @@ public:
     /**
     * Constructs a MainWindow which is a child of parent.
     *
+    * @param [in] pointer to the extension manager. It is needed to display subwindows froms extensions.
     * @param [in] parent pointer to parent widget; If parent is Q_NULLPTR, the new MainWindow becomes a window. If parent is another widget, MainWindow becomes a child window inside parent. MainWindow is deleted when its parent is deleted.
     */
-    MainWindow(QWidget *parent = Q_NULLPTR);
+    MainWindow(QSharedPointer<ANSHAREDLIB::ExtensionManager> pExtensionManager, QWidget *parent = Q_NULLPTR);
 
     //=========================================================================================================
     /**
@@ -116,24 +114,11 @@ public:
     */
     ~MainWindow();
 
-    //=========================================================================================================
-    /**
-    * Initializes the global settings
-    */
-    void initGlobalSettings();
-
-    //=========================================================================================================
-    /**
-    * Initializes the global data base
-    */
-    void initGlobalData();
-
-
 private:
     void createActions();       /**< Creates all actions for user interface of MainWindow class. */
     void createMenus();         /**< Creates all menus for user interface of MainWindow class. */
-    void createDockWindows();   /**< Creates all dock windows for user interface of MainWindow class. */
-    void createMdiView();       /**< Creates all Windows within the MDI View for user interface of MainWindow class. */
+    void createDockWindows(QSharedPointer<ANSHAREDLIB::ExtensionManager> pExtensionManager);   /**< Creates all dock windows for user interface of MainWindow class. */
+    void createMdiView(QSharedPointer<ANSHAREDLIB::ExtensionManager> pExtensionManager);       /**< Creates all Windows within the MDI View for user interface of MainWindow class. */
 
     void tabifyDockWindows();   /**< Tabify all dock windows */
 
@@ -154,9 +139,6 @@ private:
 
     QSharedPointer<QWidget>             m_pAboutWindow;     /**< Holds the widget containing the about information.*/
 
-    QSharedPointer<ANSHAREDLIB::ExtensionManager>   m_pExtensionManager;    /**< Holds extension manager.*/
-
-
 private:
     //Open a FIFF file
     void openFiffFile();            /**< Implements open fiff action. TODO: Move to fiffio*/
@@ -169,8 +151,6 @@ private:
     //MDI Central View
     MdiView *m_pMdiView;            /**< The Central MDI View.*/
 
-    QSharedPointer<ANSHAREDLIB::AnalyzeSettings>    m_analyzeSettings;  /**< The global settings.*/
-    QSharedPointer<ANSHAREDLIB::AnalyzeData>        m_analyzeData;      /**< The global data base.*/
 
 };
 

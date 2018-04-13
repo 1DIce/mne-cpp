@@ -1,14 +1,15 @@
 //=============================================================================================================
 /**
-* @file     dipolefit.cpp
-* @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
+* @file     analyzecore.cpp
+* @author   Lars Debor <lars.debor@tu-ilmenau.de>;
+*           Simon Heinke <simon.heinke@tu-ilmenau.de>;
 *           Matti Hamalainen <msh@nmr.mgh.harvard.edu>
 * @version  1.0
-* @date     February, 2017
+* @date     March, 2018
 *
 * @section  LICENSE
 *
-* Copyright (C) 2017 Christoph Dinh and Matti Hamalainen. All rights reserved.
+* Copyright (C) 2018, Lars Debor, Simon Heinke and Matti Hamalainen. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 * the following conditions are met:
@@ -29,17 +30,38 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 *
-* @brief    Contains the implementation of the DipoleFit class.
+* @brief    AnalyzeCore class definition.
 *
 */
+
 
 //*************************************************************************************************************
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
-#include "dipolefit.h"
-#include "FormFiles/dipolefitcontrol.h"
+#include "analyzecore.h"
+#include "mainwindow.h"
+#include "../libs/anShared/Interfaces/IExtension.h"
+#include "../libs/anShared/Management/analyzesettings.h"
+#include "../libs/anShared/Management/analyzedata.h"
+#include "../libs/anShared/Management/extensionmanager.h"
+
+#include<iostream>
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// QT INCLUDES
+//=============================================================================================================
+
+#include <QtWidgets>
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// Eigen INCLUDES
+//=============================================================================================================
 
 
 //*************************************************************************************************************
@@ -47,8 +69,16 @@
 // USED NAMESPACES
 //=============================================================================================================
 
-using namespace DIPOLEFITEXTENSION;
+using namespace MNEANALYZE;
 using namespace ANSHAREDLIB;
+
+
+//*************************************************************************************************************
+//=============================================================================================================
+// CONST
+//=============================================================================================================
+
+const char* extensionsDir = "/mne_analyze_extensions";        /**< holds path to the extensions.*/
 
 
 //*************************************************************************************************************
@@ -56,9 +86,20 @@ using namespace ANSHAREDLIB;
 // DEFINE MEMBER METHODS
 //=============================================================================================================
 
-DipoleFit::DipoleFit()
-: m_pControl(Q_NULLPTR)
-, m_pDipoleFitControl(Q_NULLPTR)
+AnalyzeCore::AnalyzeCore()
+{
+    initGlobalSettings();
+    initGlobalData();
+
+    initExtensionManager();
+    initMainWindow();
+
+}
+
+
+//*************************************************************************************************************
+
+AnalyzeCore::~AnalyzeCore()
 {
 
 }
@@ -66,87 +107,52 @@ DipoleFit::DipoleFit()
 
 //*************************************************************************************************************
 
-DipoleFit::~DipoleFit()
+void AnalyzeCore::showMainWindow()
 {
-
+    m_pMainWindow->show();
 }
 
 
 //*************************************************************************************************************
 
-QSharedPointer<IExtension> DipoleFit::clone() const
+QPointer<MainWindow> AnalyzeCore::getMainWindow()
 {
-    QSharedPointer<DipoleFit> pDipoleFitClone(new DipoleFit);
-    return pDipoleFitClone;
+    return m_pMainWindow;
 }
 
 
 //*************************************************************************************************************
 
-void DipoleFit::init()
+void AnalyzeCore::initGlobalSettings()
 {
-    m_pDipoleFitControl = new DipoleFitControl;
+    m_analyzeSettings = AnalyzeSettings::SPtr::create();
 }
 
 
 //*************************************************************************************************************
 
-void DipoleFit::unload()
+void AnalyzeCore::initGlobalData()
 {
-
+    m_analyzeData = AnalyzeData::SPtr::create();
 }
 
 
 //*************************************************************************************************************
 
-QString DipoleFit::getName() const
+void AnalyzeCore::initExtensionManager()
 {
-    return "Dipole Fit";
+    m_pExtensionManager = QSharedPointer<ExtensionManager>::create();
+    m_pExtensionManager->loadExtension(qApp->applicationDirPath() +  extensionsDir);
+    m_pExtensionManager->initExtensions(m_analyzeSettings, m_analyzeData);
 }
 
 
 //*************************************************************************************************************
 
-QMenu *DipoleFit::getMenu()
+void AnalyzeCore::initMainWindow()
 {
-    return Q_NULLPTR;
+    m_pMainWindow = new MainWindow(m_pExtensionManager);
 }
 
 
 //*************************************************************************************************************
-
-QDockWidget *DipoleFit::getControl()
-{
-    if(!m_pControl) {
-        m_pControl = new QDockWidget(tr("Dipole Fit"));
-        m_pControl->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-        m_pControl->setMinimumWidth(180);
-        m_pControl->setWidget(m_pDipoleFitControl);
-    }
-
-    return m_pControl;
-}
-
-
-//*************************************************************************************************************
-
-QWidget *DipoleFit::getView()
-{
-    return Q_NULLPTR;
-}
-
-
-//*************************************************************************************************************
-
-void DipoleFit::handleEvent(Event e)
-{
-
-}
-
-
-//*************************************************************************************************************
-
-QVector<Event::EVENT_TYPE> DipoleFit::getEventSubscriptions(void) const
-{
-    return QVector<Event::EVENT_TYPE>();
-}

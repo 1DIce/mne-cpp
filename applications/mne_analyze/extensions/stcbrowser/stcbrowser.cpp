@@ -56,6 +56,7 @@ using namespace ANSHAREDLIB;
 // DEFINE MEMBER METHODS
 //=============================================================================================================
 
+
 STCBrowser::STCBrowser()
 : m_pControl(Q_NULLPTR)
 , m_pStcControl(Q_NULLPTR)
@@ -133,4 +134,20 @@ QDockWidget *STCBrowser::getControl()
 QWidget *STCBrowser::getView()
 {
     return Q_NULLPTR;
+}
+
+
+//*************************************************************************************************************
+
+void STCBrowser::handleEvent(Event e)
+{
+
+}
+
+
+//*************************************************************************************************************
+
+QVector<Event::EVENT_TYPE> STCBrowser::getEventSubscriptions(void) const
+{
+    return QVector<Event::EVENT_TYPE>();
 }
